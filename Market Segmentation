@@ -53,4 +53,25 @@ minimize(purchase + administration cost)
  still use the whatif analysis tool -- data table > goal seek 
  
  
+  /////////calculus and optimization//////////////
+ 1. limit theory
+ 2. marginal change 
+ 3. differentiation/integration 
+ 
+ >basic components of an optimization model 
+ 1. decision variables 
+ 2. objective functions 
+ 3. constraints
+ 
+ > greedy strategy: not always offer the optimal solutions 
+ summary 
+ 1. on limits and calculus 
+ >basic concepts 
+ >applications 
+ >use python as a clculus tool 
+ 2. optimization 
+ >formulation of a problem by an optimization model 
+ >develop optimization on spreadsheet 
+ >use excel solver as optimization software 
+ 
  
