@@ -1,1 +1,56 @@
+## How to model portfolio optimization model?
+Elective1: Mean-variance model > minimize the risk which > subject to expected return should be larger than the required lower limit 
+Elective2: Mean absolute deviation model > minimize expected |portfolio return - average portfolio model| > subject to expected return should be higher than the limit
+Elective3: Naive diversification > equally devide the budget among several risky options 
 
+
+##case1 
+Target: 
+1. How to select one or more suppliers 
+decide the purchase product of each supplier 
+Constraints: 
+1. administrative cost of 7000 for each of the suppliers. Total administrative cost 7000xnumber of suppliers 
+2. for reliability, no supplier can sullpy more than 80% of the demand of any product 
+3. must supply an integer amount of each product 
+Objective: 
+minimize(purchase + administration cost)
+
+
+////////////////Data modeling and decisions under uncertainty///////
+---------------what if analysis----------------
+## how to make decision without complete information or have no informatin at all
+ 1. credit card payment 
+ a. design your monthly payment strategy 
+ b. develop a spreadsheet functions to simplify the banlance from one month to the next (base model)
+ c. use spreadsheet functions to simplify the balance calculations from one month to the next
+ [ending balance]= [current balance]x(1+monthly interest rate)-[payment]
+ q: what is the total paymeny for the 24 months?
+ 
+ >assume a base strategy > calculate the data using the base strategy 
+ >now change the important input parameter (one more change)
+ 1. change the maximum monthly payment > use the data table (if more than 2 factors, not concenient/ simply recalculate outputs)
+ 2. change 2 main factors > the data table will bot be convenient 
+ e.g. to modelling change in the credit card interest rate 
+ estimate the range of monthly interest rates from recent 5 years by (max apr-min apr)/12
+ now current apr is 12.86 yearly = 1.07% monthly 
+ in the previous time period, max/12, min/12 and then estimated monthly range (around from the current value)
+ 3. change multiple factors of the inputs
+ use the tornado chart to find which one of the factor in fluentical most 
+ 
+ 
+ ---------Senario analysis-------------
+ >both quantitative and qualititive models 
+ 1. best case scenario 6000 assume 
+ 2. worst case scenario 4000 assume 
+ (still use the what if analysis tool)
+ 1. best: maximum payment = (5000 from 1-12 and 6000 from 13)
+ 2. worst: maximum payment = (5000 from 1-12 and 4000 from 13)
+ So, how ro adjust the base model for the scenarios?
+ 
+ 
+ -----------find critical point----------
+ target: if the client want to fully pay all the balances by the end of month 18, what would be the minimum monthly payment limit?
+ still use the whatif analysis tool -- data table > goal seek 
+ 
+ 
+ 
