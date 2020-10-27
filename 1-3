@@ -74,4 +74,30 @@ minimize(purchase + administration cost)
  >develop optimization on spreadsheet 
  >use excel solver as optimization software 
  
+ ///////the rivision quiz following the chapter 3 ///////
+ 
+ 1. sample size determination 
+ when estimating a population proportion (p), the user has decided to use take a sample to construct a confidence interval for p.
+ suppose the maximum error of estimation (margin of error) can be relaxed by 10% from the original value. how dose it affect the minimum 
+ required sample size satisfying the new product?
+ >using the formula on the page 7 - 17%less 
+ 
+ 2. continue with question 1 
+ instead of relaxing the maximum error of estimation, suppose the user decide to change the confidence level (confidence interval) of p 
+ from 0.9 to 0.95. how does it affect the minimum required sample size?
+ >42% larger than before 
+ 
+ 3. what if analysis 
+ when exploring the impact of price and avaiable material on the (estimated) point, this analysis is most appripriately described as :
+ > sensitivity analysis
+ 
+ 4. Calculas   
+ what is the best description of the first and second derivatives of a given function f(x) with respect to variable x?
+ >the first derivatives finds the rate of change of f(x)
+ the decond derivatives finds shows whether f(x) is convex, concave or neither 
+ inflection point: the first derivative at this point is 0 and the second derivative at this point is also 0
+ 
+ 
+ 
+ 
  
