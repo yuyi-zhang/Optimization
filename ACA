@@ -1,0 +1,127 @@
+
+import os
+os.getcwd()
+import numpy as np
+import matplotlib.pyplot as plt
+# % pylab
+coordinates = np.array([[2000.0, 2000.0], [5700.0, 1950.0], [9900.0, 2100.0], [12660.0, 1740.0], [12500.0, 1860.0],
+                        [16700.0, 4360.0], [18320.0, 3870.0]])
+def getdistmat(coordinates):
+    num = coordinates.shape[0]
+    distmat = np.zeros((7, 7))
+    for i in range(num):
+        for j in range(i, num):
+            distmat[i][j] = distmat[j][i] = np.linalg.norm(coordinates[i] - coordinates[j])
+    return distmat
+distmat = getdistmat(coordinates)
+numant = 5  # 
+numcity = coordinates.shape[0]
+# shape[0]=7 
+alpha = 1  # 
+beta = 5   # 
+rho = 0.1  # 
+Q = 1      # 
+iter = 0       #
+itermax = 150  #
+etatable = 1.0 / (distmat + np.diag([1e10] * numcity))
+pheromonetable = np.ones((numcity, numcity))
+pathtable = np.zeros((numant, numcity)).astype(int)
+distmat = getdistmat(coordinates)
+lengthaver = np.zeros(itermax)  
+lengthbest = np.zeros(itermax)  
+pathbest = np.zeros((itermax, numcity))  
+
+while iter < itermax:
+ 
+
+    if numant <= numcity:  
+        pathtable[:, 0] = np.random.permutation(range(numcity))[:numant]
+  
+    else:  
+        pathtable[:numcity, 0] = np.random.permutation(range(numcity))[:]
+        pathtable[numcity:, 0] = np.random.permutation(range(numcity))[:numant - numcity]
+    length = np.zeros(numant)  
+ 
+    for i in range(numant):
+ 
+        visiting = pathtable[i, 0]  
+
+        unvisited = set(range(numcity))
+        unvisited.remove(visiting)  
+ 
+        for j in range(1, numcity): 
+            listunvisited = list(unvisited)
+            probtrans = np.zeros(len(listunvisited))
+
+            for k in range(len(listunvisited)):
+                probtrans[k] = np.power(pheromonetable[visiting][listunvisited[k]], alpha) \
+                               * np.power(etatable[visiting][listunvisited[k]], alpha)
+            cumsumprobtrans = (probtrans / sum(probtrans)).cumsum()
+ 
+            cumsumprobtrans -= np.random.rand()
+            k = listunvisited[list(cumsumprobtrans > 0).index(True)]
+            pathtable[i, j] = k
+            unvisited.remove(k)
+            length[i] += distmat[visiting][k]
+            visiting = k
+        length[i] += distmat[visiting][pathtable[i, 0]]
+    lengthaver[iter] = length.mean()
+
+    if iter == 0:
+        lengthbest[iter] = length.min()
+        pathbest[iter] = pathtable[length.argmin()].copy()
+    else:
+        if length.min() > lengthbest[iter - 1]:
+            lengthbest[iter] = lengthbest[iter - 1]
+        else:        
+            lengthbest[iter] = length.min()
+            pathbest[iter] = pathtable[length.argmin()].copy()
+
+    changepheromonetable = np.zeros((numcity, numcity))
+    for i in range(numant):
+        for j in range(numcity - 1):
+            changepheromonetable[pathtable[i, j]][pathtable[i, j + 1]] += Q / distmat[pathtable[i, j]][pathtable[i, j + 1]]
+        changepheromonetable[pathtable[i, j + 1]][pathtable[i, 0]] += Q / distmat[pathtable[i, j + 1]][pathtable[i, 0]]
+
+    pheromonetable = (1 - rho) * pheromonetable + changepheromonetable
+ 
+    iter += 1  
+    print("this iteration end：",iter)
+    if (iter - 1) % 20 == 0:
+    print(iter - 1)
+ 
+fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 10))
+axes[0].plot(lengthaver, 'k', marker='*')
+axes[0].set_title('Average Length')
+axes[0].set_xlabel(u'iteration')
+
+axes[1].plot(lengthbest, 'k', marker='<')
+axes[1].set_title('Best Length')
+axes[1].set_xlabel(u'iteration')
+fig.savefig('Average_Best.png', dpi=500, bbox_inches='tight')
+plt.close()
+fig.show()
+
+bestpath = pathbest[-1]
+ 
+plt.plot(coordinates[:, 0], coordinates[:, 1], 'r.', marker='>')
+plt.xlim([-100, 20000])
+#x
+plt.ylim([-100, 4500])
+#y
+ 
+for i in range(numcity - 1):
+
+    m, n = int(bestpath[i]), int(bestpath[i + 1])
+    print("best_path:",m, n)
+    plt.plot([coordinates[m][0],coordinates[n][0]],   [coordinates[m][1], coordinates[n][1]],  'k')
+ 
+plt.plot([coordinates[int(bestpath[0])][0],coordinates[int(bestpath[6])][0]],    [coordinates[int(bestpath[0])][1],coordinates[int(bestpath[5])][1]]   ,'b')
+ 
+ax = plt.gca()
+ax.set_title("Best Path")
+ax.set_xlabel('X_axis')
+ax.set_ylabel('Y_axis')
+ 
+plt.savefig('Best Path.png', dpi=500, bbox_inches='tight')
+plt.close()
