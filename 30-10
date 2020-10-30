@@ -1,0 +1,120 @@
+##import the packages 
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from statsmodels.formula.api import ols
+df = pd.read_csv('Data.csv')
+df.info();df.head()
+lm = ols('Totalprice ~ Square + Room + Date', data=df).fit()
+lm.summary()
+nominal_vars = ['Location']
+ 
+for each in nominal_vars:
+    print(each, ':')
+    print(df[each].agg(['value_counts']).T)  
+    print('='*35)
+    
+#Dummy variables
+nominal_vars = ['Location']
+ 
+for each in nominal_vars:
+    print(each, ':')
+    print(df[each].agg(['value_counts']).T)  
+    print('='*35)
+    
+nominal_data = df['Location']
+dummies=pd.get_dummies(nominal_data)
+dummies.drop(columns=['NT'],inplace=True)
+dummies.sample()
+results=pd.concat(objs=[df,dummies],axis='columns')
+results.sample(5)
+lm = ols('Totalprice ~ Square + Room + Date + HK + KLN ', data=results).fit()
+lm.summary()
+
+
+
+#import packages#
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+
+#read the data
+data= pd.read_csv('Price.csv')
+
+x=sm.add_constant(data[['Data','Size','Room']])
+y=data['Total']
+OLS=sm.OLS(y,x).fit()
+#print(OLS.summary())
+#insample prediction 
+ypred = OLS.predict(x)
+#print(ypred)
+#outsample prediction 
+x1n = np.linspace(20.5,25, 10)
+Xnew = np.column_stack((x1n, np.sin(x1n), (x1n-5)**2))
+Xnew
+#Xnew = sm.add_constant(Xnew)
+#ynewpred =  OLS.predict(Xnew) # predict out of sample
+#print(ynewpred)
+#Plot
+size=plt.subplots(figsize=(12,5))
+plt.scatter(data['Data'],y,label='Price')
+plt.plot(data['Data'],ypred,color='tomato',linestyle='-',label='OLS')
+plt.grid(True, which='both')
+plt.legend(loc='best')
+plt.xlabel('Time Point')
+plt.ylabel('Total Price with OLS')
+plt.title('Multiple Regression using OLS')
+
+
+#import packages#
+%matplotlib inline
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+
+#read the data 
+df= pd.read_csv('Price.csv')
+##lar 
+mod = smf.quantreg('Total ~ Data + Size + Room', df)
+res = mod.fit(q=.5)
+#print(res.summary())
+##visualization 
+quantiles = np.arange(.05, .96, .1)
+def fit_model(q):
+    res = mod.fit(q=q)
+    return [q, res.params['Intercept'], res.params['Size']] + \
+            res.conf_int().loc['Size'].tolist()
+models = [fit_model(x) for x in quantiles]
+models = pd.DataFrame(models, columns=['q', 'a', 'b', 'lb', 'ub'])
+ols = smf.ols('Total ~ Data + Size + Room', df).fit()
+ols_ci = ols.conf_int().loc['Size'].tolist()
+ols = dict(a = ols.params['Intercept'],
+           b = ols.params['Size'],
+           lb = ols_ci[0],
+           ub = ols_ci[1])
+print(models)
+print(ols)
+
+x = np.arange(df.Size.min(), df.Size.max(), 50)
+get_y = lambda a, b: a + b * x
+
+fig, ax = plt.subplots(figsize=(12, 5))
+
+for i in range(models.shape[0]):
+    y = get_y(models.a[i], models.b[i])
+    ax.plot(x, y, linestyle='dotted', color='blue', alpha=0.7)
+
+y = get_y(ols['a'], ols['b'])
+
+ax.plot(x, y, color='tomato', label='OLS')
+ax.scatter(df.Size, df.Size, alpha=1, color='green')
+legend = ax.legend()
+ax.set_xlabel('Size', fontsize=16)
+ax.set_ylabel('Total Price', fontsize=16);
+
