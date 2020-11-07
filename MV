@@ -1,0 +1,69 @@
+#import packages#
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.optimize as sco
+import scipy.interpolate as sci
+from scipy import stats
+sns.set(font='SimHei',rc={'figure.figsize':(15,9)})
+
+#read the data 
+data = pd.read_csv('convex.csv')
+data.head()
+data.index = data['num'].tolist()
+data.pop('num')
+
+#plot the change trend of stocks
+#data.plot(figsize=(10, 8), grid=True) 
+
+#retuen 
+rets = data
+year_ret = rets.mean()
+#covariance 
+year_volatility = rets.cov()
+#number of stock 
+number_of_assets = 4
+#have 4 randam number 
+weights = np.random.random(number_of_assets)
+weights /= np.sum(weights)
+
+##simulate 5000 portfolios 
+portfolio_returns = []
+portfolio_volatilities = []
+for p in range (5000):
+    weights = np.random.random(number_of_assets)
+    weights /= np.sum(weights)
+    portfolio_returns.append(np.sum(rets.mean() * weights) * 252)
+    portfolio_volatilities.append(np.sqrt(np.dot(weights.T, 
+                    np.dot(rets.cov() * 252, weights))))
+portfolio_returns = np.array(portfolio_returns)
+portfolio_volatilities = np.array(portfolio_volatilities) 
+plt.figure(figsize=(9, 5)) #作图大小
+plt.scatter(portfolio_volatilities, portfolio_returns, c=portfolio_returns / portfolio_volatilities, marker='.') #画散点图
+plt.grid(True)
+plt.xlabel('expected volatility')
+plt.ylabel('expected return')
+plt.colorbar(label='Sharpe ratio')
+
+#calculate the weithts 
+def statistics(weights):        
+    weights = np.array(weights)
+    pret = np.sum(rets.mean() * weights) 
+    pvol = np.sqrt(np.dot(weights.T, np.dot(rets.cov(), weights)))
+    return np.array([pret, pvol, pret / pvol])
+def min_func_sharpe(weights):
+    return -statistics(weights)[2]
+
+
+
+##optimal model 
+cons = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+bnds = tuple((0, 1) for x in range(number_of_assets))
+opts = sco.minimize(min_func_sharpe, number_of_assets * [1. / number_of_assets,], method='SLSQP',  bounds=bnds, constraints=cons)
+opts['x'].round(3)
+statistics(opts['x']).round(3)
+
+##minimum variance 
+def min_func_variance(weights):
+    return statistics(weights)[1] ** 2
+optv = sco.minimize(min_func_variance, number_of_assets * [1. / number_of_assets,], method='SLSQP', bounds=bnds, constraints=cons)
