@@ -1,0 +1,17 @@
+pip install tsp
+
+###TSP
+import tsp
+t = tsp.tsp([(0,0), (10,30), (10,50), (30,10), (40,40), (50,60)])
+print(t) 
+
+###AGV 
+mat = [[0, 40, 60, 40, 80, 110],
+       [40, 0, 20, 40, 40, 70],
+       [60, 20, 0, 60, 40, 50],
+       [40, 40, 60, 0, 40, 70],
+       [80, 40, 40, 40, 0, 30],
+       [110, 70, 50, 70, 30, 0]]  # Distance Matrix
+r = range(len(mat))
+dist = {(i, j): mat[i][j] for i in r for j in r}
+print(tsp.tsp(r, dist))
