@@ -1,0 +1,67 @@
+##quantile regression - for several independent variables 
+## import the necessary packages 
+%matplotlib inline
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+
+##read the data 
+data = pd.read_csv('Price.csv')
+
+## least absolute deviation 
+# the LAD model is a special casbe of quantile regression when q = 0.5
+mod = smf.quantreg('Total ~ Data + Size + Room', data)
+res = mod.fit(q=.5) # q could be changed 
+#print(res.summary())
+
+##Other situations - a series of the quantile regression 
+quantiles = np.arange(.05, .96, .1) # define the change of q and 10 in total 
+def fit_model(q):
+    res = mod.fit(q=q)
+    return [q, res.params['Intercept'], res.params['Size']] + \
+            res.conf_int().loc['Size'].tolist() # i define size in this place 
+models = [fit_model(x) for x in quantiles]
+models = pd.DataFrame(models, columns=['q', 'a', 'b', 'lb', 'ub'])
+ols = smf.ols('Total ~ Data + Size + Room', data).fit()
+ols_ci = ols.conf_int().loc['Size'].tolist()
+ols = dict(a = ols.params['Intercept'],
+           b = ols.params['Size'],
+           lb = ols_ci[0],
+           ub = ols_ci[1])
+#print(models)
+#print(ols)
+
+## first plot 
+# this plot compares the best fit lines for 10 quantile regression to the least square fit
+# for convenience, i define the size as the x axis 
+x = np.arange(data.Size.min(), data.Size.max(), 50)
+get_y = lambda a, b: a + b * x
+
+fig, ax = plt.subplots(figsize=(12, 5))
+
+for i in range(models.shape[0]):
+    y = get_y(models.a[i], models.b[i])
+    ax.plot(x, y, linestyle='dotted', color='blue', alpha=1)
+
+y = get_y(ols['a'], ols['b'])
+
+ax.plot(x, y, color='tomato', label='OLS')
+ax.scatter(data.Size, data.Size, alpha=1, color='green')
+legend = ax.legend()
+ax.set_xlabel('Size', fontsize=16)
+ax.set_ylabel('Total Price', fontsize=16);
+
+##second hand plot 
+n = models.shape[0]
+p1 = plt.plot(models.q, models.b, color='black', label='Quantile Reg.')
+p2 = plt.plot(models.q, models.ub, linestyle='dotted', color='black')
+p3 = plt.plot(models.q, models.lb, linestyle='dotted', color='black')
+p4 = plt.plot(models.q, [ols['b']] * n, color='red', label='OLS')
+p5 = plt.plot(models.q, [ols['lb']] * n, linestyle='dotted', color='red')
+p6 = plt.plot(models.q, [ols['ub']] * n, linestyle='dotted', color='red')
+plt.ylabel(r'$\beta_{income}$')
+plt.xlabel('Quantiles of the conditional total price distribution')
+plt.legend()
+plt.show()
