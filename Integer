@@ -1,0 +1,63 @@
+##import necessart packages 
+from pulp import *
+
+## Data difinition ##########################################
+suppliers = ['1','2','3','4','5']
+products = ['1','2','3','4','5','6','7','8']
+demand = {"1": 592, "2": 446, "3": 548, "4": 647, "5": 245, "6": 797, "7": 603, "8": 401}
+List_price = {"1": 40, "2": 98, "3": 51, "4": 83, "5": 55, "6": 87, "7": 63, "8": 96}
+discounts = [  
+            [0.27,     0.29,   0.30,   0.60,   0.06],  
+            [0.31, 	0.25, 	0.1, 	0.13, 	0.3],      
+            [0.23, 	0.32, 	0.15, 	0.6, 	0.09],  
+            [0.06, 	0.21, 	0.18, 	0.6, 	0.28],  
+            [0.17, 	0.18, 	0.06, 	0.08, 	0.31],  
+            [0.07, 	0.22, 	0.25, 	0.34, 	0.35],  
+            [0.3, 	0.18, 	0.18, 	0.31, 	0.26],  
+            [0.21, 	0.3, 	0.34, 	0.12, 	0.14]   
+             ]
+discounts = makeDict([products,suppliers],discounts,0)
+admin_cost = 7000  #7000 administration fee for a supplier 
+rel_frac = 0.8  # 80% requirement 
+sum_demand =0 #total demand for all products 
+for p in products:
+    sum_demand += demand[p]
+
+#####optimization model############################################
+prob = LpProblem("Supplier",LpMinimize)
+
+##define variables##################################################
+Select = [[l] for l in suppliers] #a list of all suppliers 
+Purchase = [(p,l) for p in products for l in suppliers]
+select_vars = LpVariable.dicts("Select_supplier",suppliers,lowBound =0,upBound=1,cat='Integer')
+purchase_vars = LpVariable.dicts("Product_from_supplier",(products,suppliers),lowBound =0,upBound=sum_demand,cat='Integer')
+
+##objective function #################################
+prob += lpSum([select_vars[l]*admin_cost for l in suppliers]) + lpSum([purchase_vars[p][l]*List_price[p]*(1-discounts[p][l]) for p in products for l in suppliers]), "Sum_of_Admin_Costs_and_Variable_Costs"
+
+##constraints###########################################################
+#1 minimum product requirement 
+for p in products:                                    
+    prob += lpSum([purchase_vars[p][l] for l in suppliers])>= demand[p], "Required_demand_of Product_%s"%p
+#2 no more than 80% from each supplier 
+for l in suppliers:
+     for p in products:   
+        prob += purchase_vars[p][l] <= rel_frac*demand[p]
+#3 the relationship between the puechase quantitaties and selection 
+for p in products:
+    for l in suppliers:                                                                      
+        prob += purchase_vars[p][l] <= sum_demand*select_vars[l]
+        
+#last several steps###########################################################
+# The problem data is written to an .lp file
+#prob.writeLP("Supplier.lp")
+# The problem is solved using PuLP's choice of Solver
+prob.solve()
+# The status of the solution is printed to the screen
+print("Status:", LpStatus[prob.status])
+# Each of the variables is printed with it's resolved optimum value
+for v in prob.variables():
+    if v.varValue>0:    # Only print non-zero decision variables
+        print(v.name, "=", v.varValue)
+# The optimised objective function value is printed to the screen    
+print("Total Cost = $", value(prob.objective))
