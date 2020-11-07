@@ -1,0 +1,45 @@
+## import the necessary packages##########
+from pulp import *
+
+## data definition########################
+level = ["1", "2", "3"]
+unit_price = {"1": 6.2, "2": 6, "3": 5}
+unit_cost = {"1": 1, "2": 0.5, "3": 0.25}
+Low_limit = {"1": 1, "2": 41, "3": 81}
+Up_limit = {"1": 40, "2": 80, "3": None}
+cap = 90
+
+##optimization model######################
+prob = LpProblem("Piecewise_linear",LpMaximize)
+
+## define the variables ##################
+level_vars = LpVariable.dicts("Level",level,lowBound =0,upBound=1,cat='Integer')
+prod_vars = LpVariable.dicts("Production",level,lowBound =0,upBound=None,cat='Integer')
+
+##objective function #####################
+prob += lpSum([prod_vars[l]*(unit_price[l] - unit_cost[l]) for l in level]), "Total_profit"
+
+##constraints ###########################
+#1 capacity 
+prob += lpSum([prod_vars[l] for l in level]) <= cap, "Capacity"
+
+#2 at most one leverl could reached 
+prob += lpSum([level_vars[l] for l in level]) <= 1, "Sum_level"
+
+#3 the relationship between the production quantity and level 
+for l in level:                                                                  
+    prob += prod_vars[l] >= Low_limit[l]*level_vars[l]
+    if l != "3":
+        prob += prod_vars[l] <= Up_limit[l]*level_vars[l]
+    else:
+        prob += prod_vars[l] <= cap*level_vars[l]
+        
+##the last several steps#################
+#prob.writeLP("Piecewise_linear.lp")
+prob.solve()
+print("Status:", LpStatus[prob.status])
+for v in prob.variables():
+    if v.varValue>0:    # Only print non-zero decision variables
+        print(v.name, "=", v.varValue)
+print("Total Profit = $", value(prob.objective))
+
