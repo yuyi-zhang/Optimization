@@ -1,0 +1,32 @@
+##IMPORT THE PACKAGES 
+from sympy import *
+import numpy as np
+
+#DEFINE THE VARIABLES 
+x1,x2,k1,k2 = symbols('x1,x2,k1,k2')
+
+#OBJECTIVE FUNCTIONS
+f = 50*x1**0.025 + 20*x2**0.018
+
+#CONSTRAINTS 
+g1 = 0.7*x1 -0.3*x2 # >0
+g2 = x1+x2-1000# >0
+
+#DEFINE THE KKT 
+L = f + k1*g1 + k2*g2
+
+##DIFFERENTIATION 
+dx1 = diff(L,x1)
+dx2 = diff(L,x2)
+dk1 = diff(L,k1)
+dk2 = diff(L,k2)
+
+#SLOVE THE FUNCATION 
+m= solve([dx1,dx2,dk1,dk2],[x1,x2,k1,k2])
+print(m)
+
+#PRINT THE RESULTS 
+x1=300
+x2 = 700
+f = 50*x1**0.025 + 20*x2**0.018
+print(f)
