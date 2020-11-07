@@ -1,0 +1,70 @@
+##Import the packages 
+from pulp import *
+
+
+##Data definition #################################
+Loan_d = ["1", "2", "3", "4", "5"]
+cash_on_hand = 0.2
+initial_cash = 0.4
+interest = {"1": 0.012, "2": 0.017, "3": 0.025, "4": 0.032, "5": 0.038}
+month = ["1","2","3","4","5","6"]
+receipt = {"1": 1.5, "2": 1.0, "3": 1.4, "4": 2.3, "5": 2.0, "6": 2.12}
+bill = {"1": 1.8, "2": 1.6, "3": 2.2, "4": 1.2, "5": 0.8, "6": 1.2}
+
+
+
+##Optimization model ################################
+prob = LpProblem("Cash Flow Problem",LpMinimize)
+
+
+
+
+##define variables #####################################
+Month_duration = [(m,d) for m in month for d in Loan_d]
+loan_vars = LpVariable.dicts("Month_duration",(month,Loan_d),lowBound =0,upBound=None,cat='Continuous')
+cash_vars = LpVariable.dicts("End_cash",month, lowBound =0, upBound=None,cat='Continuous')
+
+
+
+
+##Objective function #####################################
+prob += lpSum([loan_vars[m][d]*interest[d] for (m,d) in Month_duration]), "Total_Interest_payment"
+
+
+
+
+##constraints #############################################
+#1 some variables are not valid 
+for m in month:
+        for d in Loan_d:
+            if int(m) + int(d) > 6:
+                prob += loan_vars[m][d] == 0
+#2 minimum cash on hand 
+for m in month:
+    prob += cash_vars[m] >= cash_on_hand, "Min_req_cash_%s"%m
+#3 cash balance in the end of the month 
+for m in month:
+    if m == "1":
+        prob +=  initial_cash + lpSum([loan_vars[m][d] for d in Loan_d]) + receipt[m] - bill[m] == cash_vars[m]
+    else:
+        x = str(int(m)-1)   # Previous month in numeric format
+        prob +=  cash_vars[x]+lpSum([loan_vars[m][d] for d in Loan_d]) + receipt[m] - bill[m] - lpSum(loan_vars[i][j]*(1+interest[j]) for i in month for j in Loan_d if int(i)+int(j) == int(m)) == cash_vars[m]
+
+        
+        
+        
+        
+        
+##last several steps #####################################
+# The problem data is written to an .lp file
+prob.writeLP("Cash_flow.lp")
+# The problem is solved using PuLP's choice of Solver
+prob.solve()
+# The status of the solution is printed to the screen
+print("Status:", LpStatus[prob.status])
+# Each of the variables is printed with it's resolved optimum value
+for v in prob.variables():
+    if v.varValue > 0:      # Print only non-zero decision variables
+        print(v.name, "= $", v.varValue,"M")
+# The optimised objective function value is printed to the screen    
+print("Total interest payment = $", value(prob.objective),"M")
