@@ -1,0 +1,38 @@
+## import the packages #############################
+from pulp import *
+
+## DATA DEFINITION - skip #######################
+## optimization model 
+prob = LpProblem("Product_mix", LpMaximize)
+
+##define variables #############################
+# 0 <= x1
+x1 = LpVariable("Number of bowls", lowBound = 0, upBound=None, cat='Continuous')
+# 0 <= x2
+x2 = LpVariable("Number of mugs", lowBound = 0, upBound=None, cat='Continuous')
+
+##objective function ##################################
+prob += 32*x1 + 40*x2, "Profit"
+
+##constraints#######################################
+prob += x1+2*x2 <= 40, "Labor"
+prob += 4*x1+3*x2 <= 120, "Clay"
+
+
+##last several steps ########################################
+# Write the problem as an LP file
+#prob.writeLP("Product_mix.lp")
+# Solve the problem using the default solver
+prob.solve()
+# Print the status of the solved LP
+print("Status:", LpStatus[prob.status])
+# Print the value of the variables at the optimum
+for v in prob.variables():
+	print(v.name, "=", v.varValue)
+# Print the value of the objective
+print("Profit = $", value(prob.objective))
+
+##sensitivity analysis####################################### 
+print("\nSensitivity Analysis\nConstraint\t\tShadow Price\tSlack")
+for name, c in list(prob.constraints.items()):
+        print(name, ":", c, "\tShadow Price =", c.pi, "\t\tSlack =", c.slack)
