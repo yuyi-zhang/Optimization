@@ -1,0 +1,54 @@
+## import packages 
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from statsmodels.formula.api import ols
+import sympy
+from sympy import * 
+import math
+
+## define symbol and simplify 
+x,x1,x2=symbols('x,x1,x2')
+a,b,c=symbols('a,b,c')
+p,n,t=symbols('p,n,t',real=True)
+#f=a+bx
+#f.simplify
+
+##Find the limit 
+f=1/x
+print(limit(f,x,1))
+print(limit(f,x,0))
+f=(x**2-1)/(x+1)
+print(limit(f,x,-1))
+
+##find the derivatives
+diff(c*x*(1-x),x)
+diff(sqrt(x),x)
+diff(c*exp(-p)*p,p)
+##find the partial derivatives 
+f=(x1+x2)**2
+diff(f,x1)
+diff(f,x2)
+diff(f,x1,2)
+diff(f,x2,2)
+diff(f,x1,x2,2)
+diff(f,x2,x1,2)
+
+##find the integrals 
+f=x**n
+integrate (f,x)
+f=1/x
+integrate (f,x)
+f=exp(x)
+integrate (f,x)
+
+##use solver 
+f=a*x**2+b*x+c
+print(solve(f,x))
+
+
+f=Function('f')
+ln(f(x))
+eq=dsolve(f(x).diff(x)-f(x)*(a-b*ln(f(x))),f(x))
+eq
