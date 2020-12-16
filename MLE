@@ -1,0 +1,117 @@
+## I promise that I am consistent with the academic honesty and do not share my result to other fellows
+
+#Import the packages 
+from gekko import GEKKO
+import math
+
+##create the model 
+model = GEKKO()
+
+##define the parameters 
+n1 = 10
+n2 = 35
+m = 4
+## define the constant composition in the log likelihood function 
+const = math.log(math.factorial(n1)) - math.log(math.factorial(m)) - math.log(math.factorial(n1-m))- math.log(math.factorial(n2-m)) + math.log(math.factorial(n2))
+## define the population size N 
+#with the lower limit, estimate upper limit and positve integer 
+N = model.Var(value=1000,lb=n1+n2-m,ub=None,integer = True)
+
+##define the objective function 
+for i in range(n2-m):
+        model.Obj(-model.log(N-(n1+n2-m-1)+i))  # Add term into objective function
+for j in range(n2):
+        model.Obj(model.log(N-(n2-1)+j))        # Add term into objective function
+
+#Set global options - for the purpose of formal process
+model.options.IMODE = 3 # steady state optimization
+model.options.SOLVER= 1  # the only solver that handles Mixed Integer problems
+
+##solve the model 
+model.solve()
+
+##print the final result 
+print('')
+print('Results:')
+print('Maximum log likelihood: ' + str(round(-model.options.objfcnval+const,6)))        # Maximum log likelihood function + constant term
+print('Maximium likelihood estimate of population size =', round(N[0],2))
+
+
+
+
+# Lab 9: Problem 1(e)(iii)
+
+from gekko import GEKKO    
+
+#Initialize Model
+m = GEKKO()
+
+#Define parameters
+n = 5 #Number of observations on defective proportion
+prop = [0.06, 0.1, 0.08, 0.04, 0.08]  #Observed defective proportion on 5 consecutive workdays
+
+#Define decision variable of production level q (in 1000s)
+q = m.Var(value=0.001, lb=0, ub=None, integer = False)
+
+# Intermediate calculation of likelihood function
+prod = 1 #Initialize product term in likelihood function
+#Workday 1 to n
+for i in range(n):
+        prod *= q*prop[i]**(q-1)
+        	
+#Define objective: Maximum likelihood function = - Minimum (-likelihood function)
+m.Obj(-prod)
+
+#Set global options
+m.options.IMODE = 3 #steady state optimization
+
+#Solve optimization model
+m.solve()
+
+#Results
+print('')
+print('Results:')
+print('Maximum likelihood function: ',-round(m.options.objfcnval,3))
+print('Maximum likelihood estimate of production level q (in 1000s): ',round(q.value[0],3))
+
+
+
+# Lab 9: Problem 2(b)
+
+from gekko import GEKKO    
+from sympy import *     # Can call factorial function from this library
+
+#Initialize Model
+m = GEKKO()
+
+#Define parameters
+n = 70 #Number of observed purchases
+x = 58 #Number of purchases made by women
+
+#Define decision variable of probability of a purchase is made by women
+p = m.Var(value=0.001, lb=0, ub=1, integer = False)
+
+#Constraints for p
+m.Equation(p>=1/2)
+m.Equation(p<=2/3)
+
+# Calculation of likelihood function
+prod = p**x*(1-p)**(n-x)*factorial(n)/factorial(x)/factorial(n-x) #Initialize product term in likelihood function
+
+#Define objective: Maximum likelihood function = - Minimum (-likelihood function)
+m.Obj(-prod)
+
+#Set global options
+m.options.IMODE = 3 #steady state optimization
+
+#Solve optimization model
+m.solve()
+
+#Results
+print('')
+print('Results:')
+print('Maximum likelihood function: ',-round(m.options.objfcnval,8))
+print('Maximum likelihood estimate of p: ',round(p.value[0],3))
+
+
+
