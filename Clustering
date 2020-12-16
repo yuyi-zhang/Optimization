@@ -1,0 +1,69 @@
+##import the necessary packages 
+from gekko import GEKKO    
+import numpy as np
+import pandas as pd
+
+##read the data 
+factor = pd.read_csv('clustering.csv').values.T
+
+#Initialize Model
+m = GEKKO()
+
+#define the parameters 
+#number of customers 
+N =198
+G = 3 #Number of groups
+F = 4 #Number of factors
+
+
+##create the model
+# Create array of assignment variables (initial value = 0.5, lower bound = 0, upper bound = 1, integer variables)
+y = [[m.Var(value=0.5,lb=0,ub=1,integer = True) for j in range(G)] for i in range(N)]
+# Create array of variables representing the average factor
+avg_f = [[m.Var(value=0,lb=0,ub=50,integer = False) for k in range(F)] for j in range(G)]
+# Define array of variables representing the squared distance
+d =[m.Var(value=0,lb=0,ub=1000,integer = False) for i in range(N)]
+# Define assignment constraints for customers
+for i in range(N):
+    m.Equation(sum([y[i][j] for j in range(G)])==1)
+# Define constraints to calculate average factor by group
+for k in range(F):
+    for j in range(G):
+        L = 0
+        R = 0
+        for i in range(N):
+            L += y[i][j]*factor[k][i]               # Sum of factor [k] values from customers assigned to group [j]
+            R += y[i][j]                            # Number of customers assigned to group [j]
+        m.Equation(L == avg_f[j][k]*R) 
+# Objective (Total distance)
+for i in range(N):
+    d[i] = sum([y[i][j]*sum([(factor[k][i] - avg_f[j][k])**2 for k in range(F)]) for j in range(G)])     # Squared distance of customer [i] from its assigned group
+    m.Obj(d[i]**0.5)
+
+#Set global options
+m.options.IMODE = 3 #steady state optimization
+m.options.SOLVER= 1  #the only solver that handles mixed integer programming models
+
+#Solve optimization model
+m.solve()
+
+#Results
+print('')
+print(' Results')
+print(' Minimum distance: ' + str(round(m.options.objfcnval,3)))
+# Initialize count of customers in each group
+count = [0 for j in range(G)]
+for j in range(G):
+    print(' Customers in group ' + str(j+1) + ': ', end=' ')
+    for i in range(N):
+        if y[i][j].value == [1]:
+            count[j] +=1
+            print(str(i+1), end=' ')
+    print(' ')
+print('')
+for j in range(G):
+    print(' Group ' + str(j+1) + ' has ' + str(count[j]) + ' customers and average factor ([income] [average purchase] [no. of purchase] [no. of dependents]) : ', end=' ')
+    for k in range(F):
+        print(str(round(avg_f[j][k].value[0],3)) + '  ', end=' ')
+    print(' ')
+    
