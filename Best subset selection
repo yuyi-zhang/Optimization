@@ -1,0 +1,106 @@
+## I promise that I am consistent with the academic honesty and do not share my result to other fellows
+##import the necessary packages 
+import pandas as pd
+import numpy as np
+import itertools
+import time
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+##read the data file 
+data = pd.read_csv('train.csv')
+
+##check the data 
+data.head()  
+
+##create a series of dummy variables for the qualitative variables 
+#gender male = 1, female = 0 
+gender = pd.get_dummies(data.Gender,prefix='Gender').loc[:, 'Gender_Male':]
+#Studen yes = 1, no = 0 
+student = pd.get_dummies(data.Student,prefix='Student').loc[:, 'Student_Yes':]
+#marriage yes = 1, no = 0 
+marridge = pd.get_dummies(data.Married,prefix='Married').loc[:, 'Married_Yes':]
+#ethnicity - to avoid the dummy variable trap: 3 diff eths, so only need 2 dummy variables
+eth = pd.get_dummies(data.Ethnicity,prefix='Ethnicity').iloc[:,1:]
+
+##the output
+y = data.Balance
+
+##define the quantitative variables 
+x_qun = data.drop(['Balance', 'Customer','Gender', 'Student', 'Married', 'Ethnicity'], axis=1).astype('float64')
+##define all the independent variables 
+x = pd.concat([x_qun, gender[['Gender_Male']], student[['Student_Yes']], marridge[['Married_Yes']], eth[['Ethnicity_Asian','Ethnicity_Caucasian']]], axis=1)
+
+##perform best subset selection 
+def processSubset(feature_set):
+    X = sm.add_constant(x[list(feature_set)]) ## extend the variable from x to X and add a constant 1 to calculate the intercept
+    model = sm.OLS(y, X)
+    regression = model.fit()
+    sse=((regression.predict(X) - y) ** 2).sum()
+    return {"model":regression, "sse":sse}
+
+
+## define a function to show the best set of variavle among all combinations with k predictors 
+def getBest(k):
+    tic = time.time()
+    results = []
+    for combo in itertools.combinations(x.columns, k):  # For each combination of k predictors in feature set X
+        results.append(processSubset(combo))
+    ##show all the models with diff lamda 
+    models = pd.DataFrame(results)
+    ##choose the only one model with the lowest sse
+    best_model = models.loc[models['sse'].idxmin()]
+    
+    toc = time.time()
+    print("Processed", models.shape[0], "models on", k, "predictors in", (toc-tic), "seconds.")
+    return best_model
+    
+   
+   ## call the function for use 
+models_best = pd.DataFrame(columns=["sse", "model"])
+
+##record the  time used, well i think this could be eliminatebut depending on personal preference, i retain this part
+tic = time.time() #record the time which could be eliminate
+for i in range(1,12):
+    models_best.loc[i] = getBest(i)     # Best model under k (= i) predictors
+toc = time.time()
+print("Total elapsed time:", (toc-tic), "seconds.")
+
+
+##display the best fitted model 
+models_best
+#display regression output of the best model with k = 6 predictors
+#the best 6 predictors
+print(models_best.loc[6, "model"].summary())
+#show the r^2 of the best model with k = 6 parameters
+models_best.loc[6, "model"].rsquared
+
+
+##now show the lamda with the r^2 value accordingly 
+models_best.apply(lambda row: row[1].rsquared, axis=1)
+
+##plot sse
+#prepare for the canvas of the plots 
+plt.figure(figsize=(20,10))
+plt.rcParams.update({'font.size': 18, 'lines.markersize': 10})
+
+##plot the trend of sse
+plt.plot(models_best["sse"])
+plt.xlabel('# Predictors')
+plt.ylabel('sse')
+
+#then plot the r^2 according to diff lamda and mark the one with the largest r^2 
+rsquared = models_best.apply(lambda row: row[1].rsquared, axis=1)
+plt.plot(rsquared)
+plt.plot(rsquared.idxmax(), rsquared.max(), "or")
+plt.xlabel('# Predictors')
+plt.ylabel('R-squared')
+
+##now plot the best model with k predictors and adjusted r^2 and mark the one with the largest adjusred r^@
+rsquared_adj = models_best.apply(lambda row: row[1].rsquared_adj, axis=1)
+plt.subplot(1, 2, 2)
+plt.plot(rsquared_adj)
+plt.plot(rsquared_adj.idxmax(), rsquared_adj.max(), "or")
+plt.xlabel('# Predictors')
+plt.ylabel('adjusted R-squared')
+plt.show() 
